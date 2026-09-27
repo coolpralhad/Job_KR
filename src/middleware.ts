@@ -1,7 +1,7 @@
 import { createServerClient } from "@supabase/ssr"
 import { NextResponse, type NextRequest } from "next/server"
 
-export async function proxy(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request })
 
   const supabase = createServerClient(
@@ -26,7 +26,6 @@ export async function proxy(request: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser()
   const { pathname } = request.nextUrl
 
-  // Routes that require authentication
   const candidateRoutes = ["/dashboard", "/applications", "/saved-jobs", "/alerts", "/onboarding"]
   const employerRoutes = ["/employer"]
   const adminRoutes = ["/admin"]
@@ -43,7 +42,6 @@ export async function proxy(request: NextRequest) {
   }
 
   if (user && (isEmployer || isAdmin)) {
-    // Fetch role and enforce access
     const { data: profile } = await supabase
       .from("profiles")
       .select("role")
@@ -58,7 +56,6 @@ export async function proxy(request: NextRequest) {
     }
   }
 
-  // Redirect authenticated users away from auth pages
   if (user && pathname.startsWith("/auth/") &&
       !pathname.startsWith("/auth/callback") &&
       !pathname.startsWith("/auth/verify")) {
